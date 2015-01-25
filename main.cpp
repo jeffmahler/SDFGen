@@ -27,10 +27,11 @@ int main(int argc, char* argv[]) {
 
     std::cout << "The output filename will match that of the input, with the OBJ suffix replaced with SDF.\n\n";
 
-    std::cout << "Usage: SDFGen <filename> <dx> <padding>\n\n";
+    std::cout << "Usage: SDFGen <filename> <dim> <padding>\n\n";
     std::cout << "Where:\n";
     std::cout << "\t<filename> specifies a Wavefront OBJ (text) file representing a *triangle* mesh (no quad or poly meshes allowed). File must use the suffix \".obj\".\n";
-    std::cout << "\t<dx> specifies the length of grid cell in the resulting distance field.\n";
+    //    std::cout << "\t<dx> specifies the length of grid cell in the resulting distance field.\n";
+    std::cout << "\t<dim> specifies the dimension of the cube";
     std::cout << "\t<padding> specifies the number of cells worth of padding between the object bound box and the boundary of the distance field grid. Minimum is 1.\n\n";
     
     exit(-1);
@@ -44,13 +45,20 @@ int main(int argc, char* argv[]) {
 
   std::stringstream arg2(argv[2]);
   float dx;
-  arg2 >> dx;
-  
+  int dim;
+  //  arg2 >> dx;
+  arg2 >> dim;
+
   std::stringstream arg3(argv[3]);
   int padding;
   arg3 >> padding;
 
   if(padding < 1) padding = 1;
+  if(2*padding > dim) {
+    std::cout << "Padding greater than cube dim" << std::endl;
+    exit(1);
+  }
+
   //start with a massive inside out bound box.
   Vec3f min_box(std::numeric_limits<float>::max(),std::numeric_limits<float>::max(),std::numeric_limits<float>::max()), 
     max_box(-std::numeric_limits<float>::max(),-std::numeric_limits<float>::max(),-std::numeric_limits<float>::max());
@@ -64,6 +72,8 @@ int main(int argc, char* argv[]) {
   }
 
   int ignored_lines = 0;
+  int count = 0;
+  std::string slash = "/";
   std::string line;
   std::vector<Vec3f> vertList;
   std::vector<Vec3ui> faceList;
@@ -80,8 +90,37 @@ int main(int argc, char* argv[]) {
     else if(line.substr(0,1) == std::string("f")) {
       std::stringstream data(line);
       char c;
+      std::string v0str, v1str, v2str;
       int v0,v1,v2;
-      data >> c >> v0 >> v1 >> v2;
+      data >> c >> v0str >> v1str >> v2str;
+      
+      // get vertex index from slash parsing
+      size_t pos = 0;
+      std::string token = v0str;
+      if ((pos = v0str.find(slash)) != std::string::npos) {
+        token = v0str.substr(0, pos);
+      }
+      v0 = atoi(token.c_str());
+
+      pos = 0;
+      token = v1str;
+      if ((pos = v1str.find(slash)) != std::string::npos) {
+        token = v1str.substr(0, pos);
+      }
+      v1 = atoi(token.c_str());
+
+      pos = 0;
+      token = v2str;
+      if ((pos = v2str.find(slash)) != std::string::npos) {
+        token = v2str.substr(0, pos);
+      }
+      v2 = atoi(token.c_str());
+
+      // if (v0 - 1 == 2649) {
+      //   std::cout << "line " << line << std::endl;
+      //   std::cout << "data " << c << " " << v0 << " " << v1 << " " << v2 << std::endl;
+      // }
+      count++;
       faceList.push_back(Vec3ui(v0-1,v1-1,v2-1));
     }
     else {
@@ -97,10 +136,21 @@ int main(int argc, char* argv[]) {
 
   //Add padding around the box.
   Vec3f unit(1,1,1);
-  min_box -= padding*dx*unit;
-  max_box += padding*dx*unit;
-  Vec3ui sizes = Vec3ui((max_box - min_box)/dx);
-  
+  // min_box -= padding*dx*unit;
+  // max_box += padding*dx*unit;
+  float max_diff = std::max(max_box.v[0] - min_box.v[0], std::max(max_box.v[1] - min_box.v[1], max_box.v[2] - min_box.v[2]));
+  //  float max_bound = std::max(max_box.v[0], std::max(max_box.v[1], max_box.v[2]));
+  dx = max_diff / (dim - 2*padding);
+  std::cout << "Resolution: " << dx << " with real dimension " << max_diff << std::endl;
+  Vec3ui sizes = Vec3ui(dim);
+
+  // remap the min bounds so that the object is centered
+  Vec3f center = min_box + (max_box - min_box) / 2;
+  std::cout << "Center of grid " << center << std::endl;
+  min_box = center - Vec3f((dim * dx) / 2);
+
+  //  min_box -= padding*dx*unit;
+
   std::cout << "Bound box size: (" << min_box << ") to (" << max_box << ") with dimensions " << sizes << "." << std::endl;
 
   std::cout << "Computing signed distance field.\n";

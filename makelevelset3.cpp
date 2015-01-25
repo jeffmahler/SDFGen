@@ -125,16 +125,27 @@ void make_level_set3(const std::vector<Vec3ui> &tri, const std::vector<Vec3f> &x
    Array3i intersection_count(ni, nj, nk, 0); // intersection_count(i,j,k) is # of tri intersections in (i-1,i]x{j}x{k}
    // we begin by initializing distances near the mesh, and figuring out intersection counts
    Vec3f ijkmin, ijkmax;
+   // std::cout << "Starting loop" << std::endl;
    for(unsigned int t=0; t<tri.size(); ++t){
+     // std::cout << "Tri iter " << t << std::endl;
      unsigned int p, q, r; assign(tri[t], p, q, r);
+     
      // coordinates in grid to high precision
+     if (t == 7211) {
+       std::cout << "Tri " << tri[t].v[0] << " " << tri[t].v[1] << " " << tri[t].v[2] << std::endl;
+       std::cout << "X1 " << x[p][0] << " " << x[p][1] << " " <<  x[p][2] << " " << std::endl;
+       std::cout << "X2 " << x[q][0] << " " << x[q][1] << " " <<  x[q][2] << " " << std::endl;
+       std::cout << "X3 " << x[r][0] << " " << x[r][1] << " " <<  x[r][2] << " " << std::endl;
+     }
       double fip=((double)x[p][0]-origin[0])/dx, fjp=((double)x[p][1]-origin[1])/dx, fkp=((double)x[p][2]-origin[2])/dx;
       double fiq=((double)x[q][0]-origin[0])/dx, fjq=((double)x[q][1]-origin[1])/dx, fkq=((double)x[q][2]-origin[2])/dx;
       double fir=((double)x[r][0]-origin[0])/dx, fjr=((double)x[r][1]-origin[1])/dx, fkr=((double)x[r][2]-origin[2])/dx;
+     // std::cout << "Grid coords" << std::endl;
       // do distances nearby
       int i0=clamp(int(min(fip,fiq,fir))-exact_band, 0, ni-1), i1=clamp(int(max(fip,fiq,fir))+exact_band+1, 0, ni-1);
       int j0=clamp(int(min(fjp,fjq,fjr))-exact_band, 0, nj-1), j1=clamp(int(max(fjp,fjq,fjr))+exact_band+1, 0, nj-1);
       int k0=clamp(int(min(fkp,fkq,fkr))-exact_band, 0, nk-1), k1=clamp(int(max(fkp,fkq,fkr))+exact_band+1, 0, nk-1);
+     // std::cout << "Clamp dist" << std::endl;
       for(int k=k0; k<=k1; ++k) for(int j=j0; j<=j1; ++j) for(int i=i0; i<=i1; ++i){
          Vec3f gx(i*dx+origin[0], j*dx+origin[1], k*dx+origin[2]);
          float d=point_triangle_distance(gx, x[p], x[q], x[r]);
@@ -143,11 +154,13 @@ void make_level_set3(const std::vector<Vec3ui> &tri, const std::vector<Vec3f> &x
             closest_tri(i,j,k)=t;
          }
       }
+     // std::cout << "Point tri dist" << std::endl;
       // and do intersection counts
       j0=clamp((int)std::ceil(min(fjp,fjq,fjr)), 0, nj-1);
       j1=clamp((int)std::floor(max(fjp,fjq,fjr)), 0, nj-1);
       k0=clamp((int)std::ceil(min(fkp,fkq,fkr)), 0, nk-1);
       k1=clamp((int)std::floor(max(fkp,fkq,fkr)), 0, nk-1);
+     // std::cout << "More clamp" << std::endl;
       for(int k=k0; k<=k1; ++k) for(int j=j0; j<=j1; ++j){
          double a, b, c;
          if(point_in_triangle_2d(j, k, fjp, fkp, fjq, fkq, fjr, fkr, a, b, c)){
@@ -170,6 +183,7 @@ void make_level_set3(const std::vector<Vec3ui> &tri, const std::vector<Vec3f> &x
       sweep(tri, x, phi, closest_tri, origin, dx, +1, -1, -1);
       sweep(tri, x, phi, closest_tri, origin, dx, -1, +1, +1);
    }
+   std::cout << "Closest tri to 90, 50, 65: " << closest_tri(90,50,65) << std::endl;
    // then figure out signs (inside/outside) from intersection counts
    for(int k=0; k<nk; ++k) for(int j=0; j<nj; ++j){
       int total_count=0;
