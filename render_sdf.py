@@ -2,6 +2,7 @@ import math
 import numpy as np
 from scipy import linalg
 from scipy import spatial
+import sys
 
 import logging
 import matplotlib as mp
@@ -78,8 +79,6 @@ def render_sdf(sdf, thresh = 0.01):
     y = surface_points[1]
     z = surface_points[2]
 
-#    points = np.c_[surface_points[0], np.c_[surface_points[1], surface_points[2]]]
-#    tri = spatial.Delaunay(points)
 
     xi = np.linspace(min(x), max(x))
     yi = np.linspace(min(y), max(y))
@@ -92,17 +91,16 @@ def render_sdf(sdf, thresh = 0.01):
     ax.set_xlabel('X')
     ax.set_ylabel('Y')
     ax.set_zlabel('Z')
-    ax.set_xlim3d(0,100)
-    ax.set_ylim3d(0,100)
-    ax.set_zlim3d(0,100)
+    ax.set_xlim3d(0,sdf.dims[0])
+    ax.set_ylim3d(0,sdf.dims[1])
+    ax.set_zlim3d(0,sdf.dims[2])
 
     plt.show()
-#    IPython.embed()
-#    plt.show()
-#    IPython.embed()
-
 
 if __name__ == '__main__':
-    sdf = read_sdf(DEF_SDF_FILE)
-    render_sdf(sdf)
- #   IPython.embed()
+    if len(sys.argv) > 1:
+        sdf_filename = sys.argv[1]
+    else:
+        sdf_filename = DEF_SDF_FILE
+    sdf = read_sdf(sdf_filename)
+    render_sdf(sdf, 0.05)

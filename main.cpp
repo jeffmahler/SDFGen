@@ -31,8 +31,9 @@ int main(int argc, char* argv[]) {
     std::cout << "Where:\n";
     std::cout << "\t<filename> specifies a Wavefront OBJ (text) file representing a *triangle* mesh (no quad or poly meshes allowed). File must use the suffix \".obj\".\n";
     //    std::cout << "\t<dx> specifies the length of grid cell in the resulting distance field.\n";
-    std::cout << "\t<dim> specifies the dimension of the cube";
+    std::cout << "\t<dim> specifies the dimension of the cube\n\n";
     std::cout << "\t<padding> specifies the number of cells worth of padding between the object bound box and the boundary of the distance field grid. Minimum is 1.\n\n";
+    //    std::cout << "\t<outdir> the directory to write the output to\n\n";
     
     exit(-1);
   }

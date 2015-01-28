@@ -75,8 +75,9 @@ struct Array3
    T& operator()(int i, int j, int k)
    {
      if (i < 0 || i >= ni || j < 0 || j >= nj || k < 0 || k >= nk) {
-       std::cout << i << " " << j << " " << k << std::endl;
-       std::cout << ni << " " << nj << " " << nk << std::endl;
+       std::cout << "Illegal indices" << std::endl;
+       std::cout << "IJK: " << i << " " << j << " " << k << std::endl;
+       std::cout << "Dims: " << ni << " " << nj << " " << nk << std::endl;
      }
       assert(i>=0 && i<ni && j>=0 && j<nj && k>=0 && k<nk);
       return a[i+ni*(j+nj*k)];
